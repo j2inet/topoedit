@@ -1,0 +1,1 @@
+C:\temp\cab\output\winsdk\samples\multimedia\mediafoundation\topoedit\app\Debug\topoedit.exe
