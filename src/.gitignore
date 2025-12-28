@@ -1,0 +1,7 @@
+.vs/*
+x64/*
+enc_temp_folder/*
+tedutil/x64/*
+tedutil/Debug/*
+app/x64/*
+*.user
