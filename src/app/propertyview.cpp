@@ -414,11 +414,12 @@ HRESULT CPropertyEditWindow::CreateTitle(DWORD dwPropertyInfoIndex, RECT& labelR
 {
     HRESULT hr = S_OK;
     LPWSTR szName = NULL;
+    CStatic* pStatic = NULL;
 
     TED_ATTRIBUTE_CATEGORY Category;
     IFC( m_arrPropertyInfo[dwPropertyInfoIndex]->GetPropertyInfoName(&szName, &Category) );
 
-    CStatic* pStatic = new CStatic();
+    pStatic = new CStatic();
     CHECK_ALLOC( pStatic );
     pStatic->Create(m_hWnd, &labelRect, szName, WS_CHILD | WS_VISIBLE);
     pStatic->SetFont(m_hLabelFont);
@@ -440,6 +441,9 @@ HRESULT CPropertyEditWindow::CreatePropertyInterfaceForIndex(DWORD dwPropertyInf
     LPWSTR strName = NULL;
     LPWSTR strValue = NULL;
     VARTYPE vt;
+    RECT rectEditClient;
+    CEdit* pEditWnd;
+    bool fReadOnly = false;
 
     ITedPropertyInfo* pPropertyInfo = m_arrPropertyInfo[dwPropertyInfoIndex];
     PropertyInfoDisplay* pDisplay = m_arrPropertyInfoDisplay[dwPropertyInfoIndex];
@@ -456,7 +460,7 @@ HRESULT CPropertyEditWindow::CreatePropertyInterfaceForIndex(DWORD dwPropertyInf
     labelRect.left = labelRect.right + ms_MarginWidth;
     labelRect.right = dwViewWidth - ms_MarginWidth;
 
-    bool fReadOnly = false;
+   
     if(vt == VT_EMPTY || vt == VT_UNKNOWN || vt == (VT_VECTOR | VT_UI1))
     {
         fReadOnly = true;
@@ -464,8 +468,8 @@ HRESULT CPropertyEditWindow::CreatePropertyInterfaceForIndex(DWORD dwPropertyInf
 
     IFC( CreatePropertyEdit(dwPropertyInfoIndex, strValue, labelRect, fReadOnly) );
 
-    RECT rectEditClient;
-    CEdit* pEditWnd =  pDisplay->m_arrEdits.GetAt(pDisplay->m_arrEdits.GetCount() - 1);
+    
+     pEditWnd =  pDisplay->m_arrEdits.GetAt(pDisplay->m_arrEdits.GetCount() - 1);
     pEditWnd->GetClientRect(&rectEditClient);
     IFC( CreatePropertyTooltip(dwPropertyInfoIndex, pEditWnd->m_hWnd, GetTextForVartype(vt), rectEditClient) ); 
     pEditWnd->SetToolTipControl(pDisplay->m_arrTooltips.GetAt(pDisplay->m_arrTooltips.GetCount() -1));
@@ -531,11 +535,11 @@ Cleanup:
 HRESULT CPropertyEditWindow::CreatePropertyEdit(DWORD dwPropertyInfoIndex, CAtlStringW strInitialText, RECT& rectLabel, bool fReadOnly)
 {
     HRESULT hr = S_OK;
-
+    DWORD dwStyle = WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL;
     CEdit* pEdit = new CEdit();
     CHECK_ALLOC( pEdit );
 
-    DWORD dwStyle = WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL;
+    
     if(fReadOnly)
     {
         dwStyle |= ES_READONLY;
@@ -689,6 +693,7 @@ LRESULT CPropertyAddDialog::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
     HRESULT hr;
     LPWSTR strCombo = NULL;
     LPWSTR strEdit = NULL;
+    int editLength = -1;
     
     DWORD dwSelectionIndex = (DWORD) ::SendMessage(m_hPropertyCategoryCombo, CB_GETCURSEL, 0, 0);
     if(dwSelectionIndex > m_arrCategoryIndex.GetCount())
@@ -703,7 +708,7 @@ LRESULT CPropertyAddDialog::OnOK(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
     ::GetWindowText(m_hPropertyNameCombo, strCombo, comboLength + 1);
     m_strChosenProperty = CAtlStringW(strCombo);
 
-    int editLength = ::GetWindowTextLength(m_hPropertyValueEdit);
+    editLength = ::GetWindowTextLength(m_hPropertyValueEdit);
     strEdit = new WCHAR[editLength + 1];
     CHECK_ALLOC( strEdit );
     ::GetWindowText(m_hPropertyValueEdit, strEdit, editLength + 1);

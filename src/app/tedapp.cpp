@@ -28,12 +28,15 @@
 #include "tedtranscode.h"
 
 #include <assert.h>
+#include <wrl/client.h>
 
 unsigned int CTedApp::MAIN_TOOLBAR_ID = 5000;
 const int CTedApp::m_nSeekerRange = 100;
 const UINT_PTR CTedApp::ms_nTimerID = 0;
 const DWORD CTedApp::ms_dwTimerLen = 200;
 const double CTedApp::m_dblInitialSplitterPos = 0.65;
+
+using Microsoft::WRL::ComPtr;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -63,6 +66,7 @@ CTedAppVideoWindowHandler::~CTedAppVideoWindowHandler()
 HRESULT CTedAppVideoWindowHandler::GetVideoWindow(LONG_PTR* phWnd)
 {
     HRESULT hr = S_OK;
+    CTedVideoWindow* pVideoWindow = NULL;
 
     RECT rectLastWindow = {0, 0, 0, 0};
     if(m_arrWindows.GetCount() >= 1)
@@ -81,7 +85,7 @@ HRESULT CTedAppVideoWindowHandler::GetVideoWindow(LONG_PTR* phWnd)
         IFC( E_POINTER );
     }
     
-    CTedVideoWindow* pVideoWindow = new CTedVideoWindow();
+    pVideoWindow = new CTedVideoWindow();
     if(pVideoWindow->Create(m_hWndParent, &rect, LoadAtlString(IDS_VIDEO_PLAYBACK), WS_CAPTION | WS_POPUPWINDOW, 0, 0U, NULL) == NULL)
     {
         IFC( HRESULT_FROM_WIN32(GetLastError()) );
@@ -780,6 +784,8 @@ LRESULT CTedApp::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     HRESULT hr = S_OK;
     RECT rect;
     RECT toolRect;
+	CPropertyEditWindow* pPropView = NULL;
+    HICON hIcon = 0;
 
     m_pMediaEventHandler = new CTedAppMediaEventHandler(this);
     CHECK_ALLOC( m_pMediaEventHandler );
@@ -824,7 +830,7 @@ LRESULT CTedApp::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
     }
 
     rect.top += 5;
-    CPropertyEditWindow* pPropView = new CPropertyEditWindow();
+    pPropView = new CPropertyEditWindow();
     CHECK_ALLOC( pPropView );
     if(pPropView->Create(m_pDock->m_hWnd, rect, LoadAtlString(IDS_PROP_VIEW), WS_CHILD | WS_BORDER | WS_VISIBLE) == NULL)
     {
@@ -860,7 +866,7 @@ LRESULT CTedApp::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandle
 
     m_MFErrorHandler.SetParentWnd(m_hWnd);
     
-    HICON hIcon = ::LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_TRV));
+    hIcon = ::LoadIcon(g_hInst, MAKEINTRESOURCE(IDI_TRV));
     SetIcon(hIcon, TRUE);
     SetIcon(hIcon, FALSE);
     
@@ -2042,11 +2048,11 @@ Cleanup:
     return hr;
 }
 
-BOOL WINAPI WinMain(
-    __in HINSTANCE hInstance,
-    __in_opt HINSTANCE hPrevInstance,
-    __in_opt LPWSTR lpCmdLine,
-    __in int nCmdShow
+int  WINAPI wWinMain(
+    HINSTANCE hInstance,
+    HINSTANCE hPrevInstance,
+    LPWSTR lpCmdLine,
+    int nCmdShow
     )
 {
     HRESULT hr = S_OK;
@@ -2067,9 +2073,14 @@ BOOL WINAPI WinMain(
 
     hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_TRV));
 
+    IMFActivate** activeList;
+    UINT32 count;
+
     /* Perform initializations that apply to a specific instance */
     IFC(InitTedApp(lpCmdLine, nCmdShow));
 
+
+   
     /* Acquire and dispatch messages until a WM_QUIT uMessage is received. */
     while(GetMessage( &msg, NULL, 0, 0))
     {

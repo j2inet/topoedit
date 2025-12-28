@@ -83,10 +83,11 @@ HRESULT CTedMediaFileRenderer::BuildTopologyFromSource(IMFTopology* pTopology, I
 {
     HRESULT hr;
     CComPtr<IMFPresentationDescriptor> spPD;
+    DWORD cSourceStreams = 0;
     
     IFC( pSource->CreatePresentationDescriptor(&spPD) );
     
-    DWORD cSourceStreams = 0;
+    
     IFC( spPD->GetStreamDescriptorCount(&cSourceStreams) );
     for(DWORD i = 0; i < cSourceStreams; i++)
     {

@@ -21,9 +21,11 @@ class CTedContentProtectionManager
     , public IWMReaderCallback
 {
 public:
-    CTedContentProtectionManager::CTedContentProtectionManager(CTedApp* pApp) 
+    CTedContentProtectionManager(CTedApp* pApp) 
         : m_pApp(pApp)
-        , m_cRef(0)
+        , m_cRef(0),
+        IMFContentProtectionManager(),
+        IWMReaderCallback()
     {
     }
 
@@ -82,10 +84,11 @@ public:
         DWORD dwURLLength;
         LPWSTR wszURL;
         MF_URL_TRUST_STATUS TrustStatus;
+        int iResult = -1;
 
         IFC( m_spContentEnabler->GetEnableURL(&wszURL, &dwURLLength, &TrustStatus) );
 
-        int iResult = IDYES;
+        iResult = IDYES;
         if(MF_LICENSE_URL_UNTRUSTED == TrustStatus)
         {
             iResult = m_pApp->MessageBox(LoadAtlString(IDS_LICENSE_URL_UNTRUSTED), NULL, MB_YESNO);    
